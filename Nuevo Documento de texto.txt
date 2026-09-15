@@ -1,0 +1,185 @@
+"""
+Predicción de Precios de Vivienda en Colombia
+-----------------------------------------------
+Modelo de regresión (Random Forest) para estimar el precio de una vivienda
+a partir de características como área, estrato, ciudad, habitaciones, etc.
+
+Si tienes un dataset real (CSV), reemplaza la sección "1. DATOS" por tu
+propia carga de datos (pd.read_csv) — el resto del pipeline funciona igual.
+"""
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+RANDOM_STATE = 42
+np.random.seed(RANDOM_STATE)
+
+# =========================================================
+# 1. DATOS (sintéticos, con estructura realista para Colombia)
+#    -> Reemplaza este bloque por: df = pd.read_csv("tu_archivo.csv")
+# =========================================================
+N = 2000
+
+ciudades = ["Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena", "Bucaramanga"]
+# Factor de precio por m2 aproximado según ciudad (relativo, no es dato real de mercado)
+factor_ciudad = {
+    "Bogotá": 1.15, "Medellín": 1.05, "Cali": 0.85,
+    "Barranquilla": 0.80, "Cartagena": 1.00, "Bucaramanga": 0.75,
+}
+
+df = pd.DataFrame({
+    "ciudad": np.random.choice(ciudades, N),
+    "tipo_propiedad": np.random.choice(["Apartamento", "Casa"], N, p=[0.7, 0.3]),
+    "area_m2": np.round(np.random.gamma(shape=6, scale=12, size=N) + 30, 1),
+    "habitaciones": np.random.choice([1, 2, 3, 4, 5], N, p=[0.1, 0.35, 0.35, 0.15, 0.05]),
+    "banos": np.random.choice([1, 2, 3, 4], N, p=[0.25, 0.45, 0.25, 0.05]),
+    "estrato": np.random.choice([1, 2, 3, 4, 5, 6], N, p=[0.05, 0.15, 0.30, 0.25, 0.15, 0.10]),
+    "parqueaderos": np.random.choice([0, 1, 2, 3], N, p=[0.3, 0.4, 0.2, 0.1]),
+    "antiguedad_anios": np.random.randint(0, 40, N),
+    "distancia_centro_km": np.round(np.random.exponential(scale=5, size=N), 1),
+})
+
+# Precio "real" simulado (en millones de COP) como combinación de variables + ruido
+base_m2 = 3.2  # millones de COP por m2 (referencia base)
+df["precio_millones"] = (
+    df["area_m2"] * base_m2 * df["ciudad"].map(factor_ciudad)
+    + df["estrato"] * 25
+    + df["banos"] * 15
+    + df["parqueaderos"] * 20
+    - df["antiguedad_anios"] * 1.2
+    - df["distancia_centro_km"] * 3
+    + (df["tipo_propiedad"] == "Casa") * 30
+    + np.random.normal(0, 40, N)
+).clip(lower=40).round(1)
+
+print(f"Dataset generado: {df.shape[0]} propiedades, {df.shape[1]} columnas")
+print(df.head())
+
+# =========================================================
+# 2. PREPROCESAMIENTO + MODELO
+# =========================================================
+cat_cols = ["ciudad", "tipo_propiedad"]
+num_cols = ["area_m2", "habitaciones", "banos", "estrato",
+            "parqueaderos", "antiguedad_anios", "distancia_centro_km"]
+
+X = df[cat_cols + num_cols]
+y = df["precio_millones"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=RANDOM_STATE
+)
+
+preprocessor = ColumnTransformer(
+    transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols)],
+    remainder="passthrough",
+)
+
+modelo = Pipeline(steps=[
+    ("preprocesamiento", preprocessor),
+    ("regresor", RandomForestRegressor(
+        n_estimators=300, max_depth=12, random_state=RANDOM_STATE, n_jobs=-1
+    )),
+])
+
+modelo.fit(X_train, y_train)
+y_pred = modelo.predict(X_test)
+
+# =========================================================
+# 3. MÉTRICAS
+# =========================================================
+mae = mean_absolute_error(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+r2 = r2_score(y_test, y_pred)
+
+print("\n--- Métricas del modelo ---")
+print(f"MAE  (error absoluto medio): {mae:,.1f} millones COP")
+print(f"RMSE (raíz del error cuadrático medio): {rmse:,.1f} millones COP")
+print(f"R²   (varianza explicada): {r2:.3f}")
+
+# Importancia de variables (nombres tras el OneHotEncoder)
+encoder = modelo.named_steps["preprocesamiento"].named_transformers_["cat"]
+nombres_cat = encoder.get_feature_names_out(cat_cols)
+nombres_features = np.concatenate([nombres_cat, num_cols])
+importancias = modelo.named_steps["regresor"].feature_importances_
+df_importancia = pd.DataFrame({
+    "variable": nombres_features, "importancia": importancias
+}).sort_values("importancia", ascending=False)
+
+# =========================================================
+# 4. DASHBOARD VISUAL
+# =========================================================
+sns.set_theme(style="whitegrid")
+fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+
+# 1. Distribución de precios
+sns.histplot(df["precio_millones"], kde=True, ax=axes[0, 0], color="steelblue")
+axes[0, 0].set_title("1. Distribución de Precios (millones COP)")
+axes[0, 0].set_xlabel("Precio (millones COP)")
+
+# 2. Precio por ciudad
+sns.boxplot(data=df, x="ciudad", y="precio_millones", hue="ciudad",
+            ax=axes[0, 1], palette="viridis", legend=False)
+axes[0, 1].set_title("2. Precio por Ciudad")
+axes[0, 1].tick_params(axis="x", rotation=30)
+axes[0, 1].set_xlabel("")
+
+# 3. Área vs Precio, coloreado por estrato
+sc = axes[0, 2].scatter(df["area_m2"], df["precio_millones"], c=df["estrato"],
+                         cmap="plasma", alpha=0.6, s=15)
+axes[0, 2].set_title("3. Área vs Precio (color = estrato)")
+axes[0, 2].set_xlabel("Área (m²)")
+axes[0, 2].set_ylabel("Precio (millones COP)")
+plt.colorbar(sc, ax=axes[0, 2], label="Estrato")
+
+# 4. Correlación entre variables numéricas
+corr = df[num_cols + ["precio_millones"]].corr()
+sns.heatmap(corr, annot=True, cmap="Blues", fmt=".2f", ax=axes[1, 0])
+axes[1, 0].set_title("4. Correlación entre Variables")
+
+# 5. Importancia de variables
+sns.barplot(data=df_importancia.head(8), x="importancia", y="variable", hue="variable",
+            ax=axes[1, 1], palette="mako", legend=False)
+axes[1, 1].set_title("5. Importancia de Variables (Random Forest)")
+axes[1, 1].set_xlabel("Importancia")
+axes[1, 1].set_ylabel("")
+
+# 6. Predicho vs Real (con línea ideal y R²)
+axes[1, 2].scatter(y_test, y_pred, alpha=0.5, s=15, color="darkorange")
+lims = [min(y_test.min(), y_pred.min()), max(y_test.max(), y_pred.max())]
+axes[1, 2].plot(lims, lims, "--", color="navy", lw=2, label="Predicción ideal")
+axes[1, 2].set_title(f"6. Precio Real vs Predicho (R² = {r2:.2f})")
+axes[1, 2].set_xlabel("Precio Real (millones COP)")
+axes[1, 2].set_ylabel("Precio Predicho (millones COP)")
+axes[1, 2].legend()
+
+plt.tight_layout()
+plt.savefig("dashboard_precios_vivienda.png", dpi=150)
+plt.show()
+
+print("\nDashboard guardado como 'dashboard_precios_vivienda.png'")
+
+# =========================================================
+# 5. EJEMPLO: predecir el precio de una vivienda nueva
+# =========================================================
+vivienda_nueva = pd.DataFrame([{
+    "ciudad": "Medellín",
+    "tipo_propiedad": "Apartamento",
+    "area_m2": 75,
+    "habitaciones": 3,
+    "banos": 2,
+    "estrato": 4,
+    "parqueaderos": 1,
+    "antiguedad_anios": 5,
+    "distancia_centro_km": 3.5,
+}])
+precio_estimado = modelo.predict(vivienda_nueva)[0]
+print(f"\nEjemplo — precio estimado para la vivienda de prueba: "
+      f"{precio_estimado:,.1f} millones COP")
