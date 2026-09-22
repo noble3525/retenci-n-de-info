@@ -1,0 +1,47 @@
+Aprendizaje no supervisado: el pastel y el glaseado
+
+Tu metáfora es buena, la dejo como hilo conductor: si el aprendizaje no supervisado es el pastel (la estructura, la base), el aprendizaje supervisado es el glaseado (el detalle fino que se le pone encima). Aquí va el orden del caos, convertido en algo elegante.
+
+1. ¿Qué es el aprendizaje no supervisado?
+
+Le das a la máquina datos sin etiquetas — no le dices "esto es un perro" o "esto es fraude" — y ella tiene que encontrar la estructura por sí sola: identificar y agrupar datos similares según sus características, formando "familias lógicas" sin que nadie le diga cuáles son de antemano.
+
+El agrupamiento (clustering) es, de hecho, uno de los motores silenciosos detrás de los buscadores modernos: agrupar documentos o consultas similares para organizar resultados.
+
+2. Agrupamiento y K-means
+
+K-means es el algoritmo clásico: tú le dices cuántos grupos quieres (ej. 5) y el algoritmo va moviendo "centros" hasta que cada punto queda asignado al grupo más cercano.
+
+Lo importante no es solo que agrupe, sino qué tan bien agrupa. Para eso existen métricas de evaluación (como el silhouette score) que miden qué tan bien separados y compactos quedan los grupos — no basta con que existan 5 grupos, hay que medir si esos 5 grupos tienen sentido.
+
+3. Segmentación de imágenes
+
+Para una computadora, una imagen son millones de píxeles sueltos, sin significado. La segmentación agrupa esos píxeles en regiones con características similares (color, textura, intensidad), reduciendo el problema de "millones de píxeles individuales" a un puñado de regiones con sentido (cielo, carretera, persona, etc.).
+
+Aquí aparece el aprendizaje activo: partes de datos crudos con mucha incertidumbre, y en lugar de que la máquina adivine sola, hay una colaboración máquina-humano — el modelo pregunta ("¿esto es A o B?") en los casos donde tiene más duda, y el humano etiqueta esos casos puntuales. Así el modelo aprende más rápido con menos etiquetas.
+
+4. Formas complejas (clustering basado en densidad)
+
+K-means asume que los grupos son más o menos "redondos". Pero los datos reales tienen formas rarísimas (espirales, lunas, anillos). Algoritmos como DBSCAN resuelven esto identificando zonas de alta densidad de puntos y expandiéndose desde ahí, en vez de forzar una forma geométrica predefinida — así detectan grupos de forma arbitraria con bastante precisión.
+
+5. Detección de anomalías
+
+La idea es entrenar al modelo con lo "normal" y hacer que detecte lo que se sale de ese patrón. El ejemplo clásico: le muestras 1000 imágenes de perros, y cuando aparece un gato, el modelo lo "siente raro" porque no encaja en la densidad ni en las características aprendidas del grupo mayoritario.
+
+6. Mezcla de Gaussianas (GMM)
+
+Es un enfoque más matemático y riguroso: en vez de asignar cada punto a un solo grupo de forma dura (como K-means), el modelo asume que los datos provienen de una mezcla de varias distribuciones gaussianas superpuestas, y calcula la probabilidad de que cada punto pertenezca a cada una.
+
+Esto sirve especialmente bien para detectar anomalías: los puntos aislados, donde la densidad de probabilidad es mínima bajo cualquiera de las gaussianas del modelo, son los candidatos a anomalía. Es como una "brújula matemática" que se ajusta de forma completa y precisa a la forma real de los datos, en vez de imponerles una forma rígida.
+
+¿Cómo se desbloquea valor con estos datos?
+
+El valor no está en los datos crudos, sino en la estructura que se les impone:
+
+Agrupamiento → descubre segmentos de clientes, temas, comportamientos que nadie definió de antemano.
+Segmentación → convierte ruido visual en regiones interpretables.
+Aprendizaje activo → maximiza el aprendizaje con el mínimo de etiquetado humano (caro).
+Detección de anomalías / GMM → convierte "lo raro" en una señal accionable (fraude, fallas, outliers).
+
+realiza una aplicacion que entienda los algortimos procesado K-means, DBScan para visualizar y que me permita entender los parametros y comparar su rendimiento con dataset personalizados cargados, desde archivos CSV o JSON en tiempo real,
+e incluir una interfaz visual para ajustar los parametros de cada modelo.
