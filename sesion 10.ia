@@ -1,0 +1,65 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+#poner el estilo de seaborn
+sns.set(style="whitegrid")
+
+#pedir al usuario que ingrese los valores de n, s y m, si los ingresa mal puñalada pirobo
+n = int(input("Ingrese el valor de n (cantidad de muestras):"))
+s = float(input("Ingrese el valor de s (separabilidad, ej: 2.0):"))
+m = int(input("Ingrese el valor de m (cantidad de modelos a comparar):"))
+
+def generar_curva_roc(n, s, semilla=None):
+    """
+    n = cantidad de muestras (puntos positivos y negativos)
+    s = separabilidad entre clases (a mayor s, mejor el clasificador)
+    """
+    rng = np.random.default_rng(semilla)
+    y_true = rng.integers(0, 2, size=n)
+    scores = rng.normal(loc=y_true * s, scale=1.0, size=n)
+
+    umbrales = np.linspace(scores.max() + 1, scores.min() - 1, 200)
+    tpr_list, fpr_list = [], []
+    positivos = y_true.sum()
+    negativos = n - positivos
+
+    for u in umbrales:
+        pred = (scores >= u).astype(int)
+        tp = np.sum((pred == 1) & (y_true == 1))
+        fp = np.sum((pred == 1) & (y_true == 0))
+        tpr_list.append(tp / positivos if positivos > 0 else 0)
+        fpr_list.append(fp / negativos if negativos > 0 else 0)
+
+    fpr = np.array(fpr_list)
+    tpr = np.array(tpr_list)
+    orden = np.argsort(fpr)
+    # AUC calculado a mano con la regla del trapecio (por si tu numpy no tiene trapz)
+    auc = np.abs(np.sum(np.diff(fpr[orden]) * (tpr[orden][:-1] + tpr[orden][1:]) / 2))
+    return fpr, tpr, auc
+
+#graficar la curva rock, ahora si como la foto ;)
+plt.figure(figsize=(7, 6))
+plt.plot([0, 0, 1], [0, 1, 1], color='purple', linewidth=3, label='Clasificador perfecto')
+plt.plot([0, 1], [0, 1], color='red', linestyle='--', linewidth=2, label='Clasificador aleatorio')
+
+#generar m modelos con separabilidad decreciente para que se vean distintos entre si
+resultados = []
+separabilidades = np.linspace(s, s * 0.3, m)
+
+for i, sep in enumerate(separabilidades):
+    fpr, tpr, auc = generar_curva_roc(n, sep, semilla=i)
+    plt.plot(fpr, tpr, linewidth=2, label=f'Modelo {i+1} (AUC={auc:.2f})')
+    resultados.append({'modelo': f'Modelo {i+1}', 'separabilidad': round(sep, 2), 'AUC': round(auc, 3)})
+
+plt.title('ROC CURVE')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='lower right')
+plt.tight_layout()
+plt.show()
+
+#crear y mostrar la tabla de resultados
+tabla_resultados = pd.DataFrame(resultados)
+print(tabla_resultados)
