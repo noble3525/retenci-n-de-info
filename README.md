@@ -1,5 +1,5 @@
 #hacer ejercicios con datos n,s, y m que tenga una curva rock y que tenga una tabla de resultados, espero que sea asi ajjajaj;V
-import numpy as np
+import numpy as np  
 import matplotlib.pyplot as plt
 import pandas as pd 
 import seaborn as sns
