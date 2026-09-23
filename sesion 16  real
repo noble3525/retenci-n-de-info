@@ -1,0 +1,95 @@
+Redes neuronales: de la neurona biológica a la red artificial
+1. El punto de partida: la neurona biológica
+
+Todo nace observando cómo funciona nuestro cerebro. Una neurona humana recibe señales de otras neuronas a
+través de las dendritas, las procesa en el cuerpo celular, y si la señal acumulada es suficientemente fuerte,
+"dispara" un impulso eléctrico que viaja por el axón y libera neurotransmisores hacia la siguiente neurona.
+Las neuronas están conectadas entre sí formando redes, y esas conexiones tienen distinta "fuerza" 
+(unas sinapsis transmiten más intensamente que otras).
+
+La idea central que se copió de la naturaleza fue esa: unidades simples, muy conectadas entre sí,
+donde la fuerza de cada conexión importa.
+
+2. El perceptrón: la primera neurona artificial
+
+El perceptrón es la traducción matemática de esa idea:
+
+Recibe varias entradas (números).
+Cada entrada se multiplica por un peso (equivalente a la "fuerza" de la sinapsis).
+Se suman esos productos.
+El resultado pasa por una función escalón: si supera un umbral, la neurona "dispara" (salida 1); si no,
+se queda callada (salida 0).
+
+Por eso el perceptrón es básicamente un clasificador binario: responde sí/no, aprueba/no aprueba,
+es A o es B.
+
+El problema inicial: una sola neurona (un solo perceptrón) solo puede trazar una línea recta para
+separar las clases. No podía resolver problemas donde los datos no son "linealmente separables" 
+(el ejemplo clásico es la función XOR). Esto casi mata la investigación en redes neuronales durante años,
+porque se pensaba que una neurona aislada era todo lo que se podía hacer.
+
+3. El perceptrón multicapa (MLP): aquí cambia todo
+
+La solución fue apilar neuronas en capas, incluyendo capas ocultas entre la entrada y la salida. Con varias
+capas, la red ya no dibuja una sola línea recta: puede combinar muchas líneas y curvar, doblar y ajustar
+la frontera de decisión con mucha más libertad.
+
+Es como pasar de dibujar con una sola línea de lápiz a tener todo un estudio de dibujo: cada capa oculta 
+agrega una nueva "pasada" que permite formas cada vez más complejas.
+
+4. ¿Cómo aprende? Backpropagation
+
+Una vez que la red hace una predicción, se compara contra el resultado correcto y se calcula el error.
+Ese error viaja hacia atrás por la red (de la salida hacia la entrada), capa por capa, usando cálculo
+matemático (derivadas/gradientes) para saber cuánto contribuyó cada peso a ese error. Con esa información,
+los pesos se ajustan un poquito para reducir el error la próxima vez. Este proceso —propagar el error hacia
+atrás para corregir los pesos— es el algoritmo de backpropagation, y es el corazón del entrenamiento de casi
+cualquier red neuronal moderna.
+
+5. Llevándolo a la práctica: construir modelos reales
+
+Para entrenar una red hace falta un flujo constante y ordenado de datos: si los datos "se estancan" o llegan
+mal organizados, la red no puede aprender el patrón (por ejemplo, "esto es un zapato").
+
+Un dataset clásico para practicar visión artificial es Fashion MNIST, el reemplazo moderno de MNIST:
+en vez de dígitos escritos a mano, son imágenes pequeñas de prendas de ropa (zapatos, camisetas, bolsos, 
+etc.). Es un problema típico para empezar con clasificación de imágenes, incluso en proyectos con hardware
+limitado como un ESP32.
+
+6. Cuando una línea recta no alcanza: redes Wide & Deep
+
+Una red "en línea recta" (una capa tras otra, todo secuencial) tiene un límite: solo puede combinar la 
+información de forma muy rígida. Las redes Wide & Deep conectan múltiples caminos dentro de la misma red:
+una parte "ancha" (wide) que aprende relaciones simples y directas entre entradas y salida, y una parte 
+"profunda" (deep) que aprende patrones más abstractos y complejos, combinando ambas al final. Esto da más
+flexibilidad que apilar capas en una sola fila.
+
+7. Las tres formas de construir el modelo en código (Keras)
+API Secuencial: la más simple y directa. Resuelve la mayoría de los problemas comunes, apilando capas una detrás de otra.
+API Funcional: permite armar arquitecturas más flexibles (como Wide & Deep), conectando entradas y capas de formas no lineales.
+API de Subclases: uno mismo "arma el plano y lo construye" a mano, con flexibilidad ilimitada. Es la usada en investigación de
+vanguardia porque ahorra semanas de trabajo cuando se necesita algo muy personalizado, pero es más difícil de revisar/depurar 
+y exige mucha precisión, porque no hay una estructura predefinida que te "cuide" de errores.
+
+
+Diferencia entre el cerebro humano y una red neuronal artificial
+	Cerebro humano	Red neuronal artificial
+Unidad básica	Neurona biológica, con química real (neurotransmisores, iones)	Neurona matemática: una suma ponderada + función de activación
+Comunicación	Señales eléctricas y químicas, con impulsos ("todo o nada") en tiempo real	Números que fluyen en una dirección (hacia adelante)
+durante la predicción
+Aprendizaje	Las sinapsis cambian de fuerza mediante procesos bioquímicos complejos (plasticidad sináptica), sin un "profesor" 
+que calcule errores exactos	Los pesos se ajustan matemáticamente con backpropagation, comparando contra una respuesta 
+correcta conocida
+Escala y conexión	~86 mil millones de neuronas, con conexiones en todas direcciones, funcionando en paralelo de forma
+masiva y asincrónica	Miles a miles de millones de "neuronas" organizadas en capas, generalmente con un flujo de información 
+ordenado (hacia adelante) y sincronizado
+Energía	Extremadamente eficiente (el cerebro completo consume ~20 watts)	Entrenar redes grandes consume muchísima energía 
+en comparación
+Propósito del diseño	Evolucionó para sobrevivir: percepción, movimiento, emociones, memoria, todo integrado	Se diseña
+   para una tarea específica (clasificar imágenes, generar texto, etc.)
+
+
+En resumen: la red artificial se inspira en la idea general de la neurona biológica (unidades conectadas donde 
+la fuerza de la conexión importa), pero es una simplificación matemática enorme. No imita la química real del 
+cerebro ni su forma de aprender; toma prestada solo la arquitectura básica —entradas, conexiones ponderadas,
+activación— y la entrena con matemática (gradientes y backpropagation) en lugar de biología.
