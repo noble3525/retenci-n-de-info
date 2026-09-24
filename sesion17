@@ -1,0 +1,58 @@
+Entrenamiento de redes profundas
+
+Problema de los gradientes inestables
+Las señales de error se desvanecen (vanishing) o explotan (exploding) al propagarse hacia atrás por redes muy profundas,
+dificultando el ajuste de las primeras capas.
+
+Saturación de la sigmoide
+En sus extremos la función se aplana, la derivada tiende a 0 y el gradiente deja de transmitir información útil hacia atrás.
+
+Inicialización de pesos (Glorot/Xavier, ~2010)
+La investigación mostró que la señal que entra y sale de cada capa debe conservar
+aproximadamente la misma varianza ("energía"). Calibrar los pesos correctamente desde 
+el inicio evita que el gradiente se desvanezca o explote desde el primer momento.
+
+Problema de ReLU ("neuronas muertas")
+ReLU no se satura en la parte positiva, pero si una neurona recibe siempre valores
+negativos, su salida y su gradiente quedan en 0 de forma permanente: la neurona "muere".
+Por eso surgieron variantes y activaciones modernas como GELU, Swish y Mish.
+
+Normalización de datos
+Se centran y estabilizan las entradas de cada capa (matemáticamente)
+para que el algoritmo de entrenamiento no colapse.
+
+Control del gradiente
+Se necesita un mecanismo de control absoluto sobre su magnitud para
+evitar que explote (gradient clipping).
+
+Aprendizaje transferido
+Se reutilizan capas de redes ya entrenadas: se congela la base y se ajustan solo las capas
+superiores para la tarea específica. Esta técnica impulsó el renacimiento de las redes profundas.
+
+Preentrenamiento y regularización
+El aprendizaje no supervisado permite que la red deduzca patrones por sí sola; técnicas como
+apagar neuronas durante el entrenamiento (dropout) evitan que dependa demasiado de neuronas
+puntuales, favoreciendo modelos más precisos.
+
+
+Analogía: el rompecabezas como entrenamiento de una red neuronal
+
+Día 1 — Empieza el aprendizaje
+Nos dan un rompecabezas y, como redes neuronales, lo armamos entre todas. Es la primera
+pasada de ajuste: las neuronas apenas están calibrando cómo encajan las piezas.
+
+Días siguientes — Repetición con más complejidad
+Cada día nos traen un rompecabezas nuevo, cada vez más grande (por ejemplo, uno de 1000 piezas).
+Lo volvemos a armar entre todas las neuronas, coordinándonos. Este proceso se repite durante dos
+años: es el entrenamiento — muchas iteraciones, muchos ejemplos, ajuste constante.
+
+Resultado del entrenamiento
+Con la repetición, las neuronas aprendemos el patrón general de "cómo se arma un rompecabezas"
+— no memorizamos una imagen en particular, sino la habilidad de coordinarnos para resolver el 
+problema. Ese conocimiento queda guardado ("las piezas las dejamos en la mitad" → los pesos ya
+ajustados quedan listos para usarse).
+
+Prueba con un caso nuevo
+Ahora nos dan un rompecabezas nunca antes visto — el de la Universidad de Colombia. Una 
+neurona coordina a las demás y, usando lo aprendido, lo armamos igual. Esta es la fase de
+prueba: aplicamos lo aprendido a un dato nuevo que la red no vio durante el entrenamiento.
